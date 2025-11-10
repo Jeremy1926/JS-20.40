@@ -21,7 +21,7 @@ class alignas(0x08) UObject
 public:
 	static inline class TUObjectArrayWrapper      GObjects;                                          // 0x0000(0x0008)(NOT AUTO-GENERATED PROPERTY)
 
-	void*                                         VTable;                                            // 0x0000(0x0008)(NOT AUTO-GENERATED PROPERTY)
+	void**                                        VTable;                                            // 0x0000(0x0008)(NOT AUTO-GENERATED PROPERTY)
 	EObjectFlags                                  Flags;                                             // 0x0008(0x0004)(NOT AUTO-GENERATED PROPERTY)
 	int32                                         Index;                                             // 0x000C(0x0004)(NOT AUTO-GENERATED PROPERTY)
 	class UClass*                                 Class;                                             // 0x0010(0x0008)(NOT AUTO-GENERATED PROPERTY)
@@ -43,6 +43,25 @@ public:
 	void ExecuteUbergraph(int32 EntryPoint);
 
 public:
+
+	template <typename _Nt>
+	_Nt* Cast(UClass* _Cl) const
+	{
+		return IsA(_Cl) ? (_Nt*)this : nullptr;
+	}
+
+	template <typename _Nt>
+	_Nt* Cast() const
+	{
+		return Cast<_Nt>(_Nt::StaticClass());
+	}
+
+	template <typename _Ut>
+	bool IsA() const
+	{
+		return IsA(_Ut::StaticClass());
+	}
+
 	static class UClass* FindClass(const char *ClassFullName)
 	{
 		return FindObject<class UClass>(ClassFullName, EClassCastFlags::Class);
@@ -66,6 +85,16 @@ public:
 	void ProcessEvent(class UFunction* Function, void* Parms) const
 	{
 		InSDKUtils::CallGameFunction(InSDKUtils::GetVirtualFunction<void(*)(const UObject*, class UFunction*, void*)>(this, Offsets::ProcessEventIdx), this, Function, Parms);
+	}
+
+	void AddToRoot() const
+	{
+		auto Item = GObjects->GetItemByIndex(Index);
+
+		if (Item)
+		{
+			Item->Flags |= 1 << 30;
+		}
 	}
 };
 static_assert(alignof(UObject) == 0x000008, "Wrong alignment on UObject");

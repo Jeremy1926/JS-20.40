@@ -203,6 +203,40 @@ namespace UC
 		};
 	}
 
+	class FMemory
+	{
+	public:
+		static void Free(void* Ptr)
+		{
+
+			static void (*FMemoryFree)(void* Ptr) = decltype(FMemoryFree)(uintptr_t(GetModuleHandle(0)) + 0xD46450);
+			return FMemoryFree(Ptr);
+		}
+
+		static void* Realloc(void* Ptr, uint64 Size, uint32 Alignment)
+		{
+
+			static void* (*FMemoryRealloc)(void* Ptr, uint64 Size, uint32 Alignment) = decltype(FMemoryRealloc)(uintptr_t(GetModuleHandle(0)) + 0x1D6E680);
+			return FMemoryRealloc(Ptr, Size, Alignment);
+		}
+
+		template<typename T>
+		static inline T* ReallocForType(void* Ptr, uint64 Count)
+		{
+			return (T*)Realloc(Ptr, Count * sizeof(T), alignof(T));
+		}
+		template<typename T>
+		static inline T* MallocForType(uint64 Count)
+		{
+			return ReallocForType<T>(nullptr, Count);
+		}
+
+		template<typename T>
+		static inline void FreeForType(T* ptr)
+		{
+			ReallocForType<T>(ptr, 0);
+		}
+	};
 
 	template <typename KeyType, typename ValueType>
 	class TPair
@@ -267,16 +301,60 @@ namespace UC
 		inline const ArrayElementType& GetUnsafe(int32 Index) const { return Data[Index]; }
 
 	public:
+
+		inline void ResizeTo(int32_t NewMax)
+		{
+			Data = (ArrayElementType*)FMemory::Realloc(Data, (MaxElements = NewMax) * sizeof(ArrayElementType), 0);
+		}
+
 		/* Adds to the array if there is still space for one more element */
 		inline bool Add(const ArrayElementType& Element)
 		{
-			if (GetSlack() <= 0)
-				return false;
 
+			ResizeTo((NumElements + 1));
 			Data[NumElements] = Element;
 			NumElements++;
 
 			return true;
+		}
+
+		template <class PT>
+		ArrayElementType* Search(PT Predicate) {
+			for (auto& v : *this) {
+				if (Predicate(v)) return &v;
+			}
+			return nullptr;
+		}
+
+		template <class PT>
+		int32_t SearchIndex(PT Predicate) {
+			for (int32_t i = 0; i < Num(); i++) {
+				if (Predicate(Data[i])) return i;
+			}
+			return -1;
+		}
+
+		inline void Free()
+		{
+			if (Data)
+				FMemory::Free(Data);
+			Data = nullptr;
+			MaxElements = 0;
+			NumElements = 0;
+		}
+
+		inline bool RemoveSingle(const int Index)
+		{
+			if (Index < NumElements)
+			{
+				if (Index != NumElements - 1)
+					Data[Index] = Data[NumElements - 1];
+
+				--NumElements;
+
+				return true;
+			}
+			return false;
 		}
 
 		inline bool Remove(int32 Index)
@@ -589,6 +667,14 @@ namespace UC
 			return end(*this);
 		}
 
+		template <class PT>
+		ValueElementType* Search(PT Predicate) {
+			for (auto& [k, v] : *this) {
+				if (Predicate(k, v)) return &v;
+			}
+			return nullptr;
+		}
+
 	public:
 		inline       ElementType& operator[] (int32 Index)       { return Elements[Index]; }
 		inline const ElementType& operator[] (int32 Index) const { return Elements[Index]; }
@@ -755,6 +841,30 @@ namespace UC
 			inline bool operator!=(const TContainerIterator& Other) const { return &IteratedContainer != &Other.IteratedContainer || BitIterator != Other.BitIterator; }
 		};
 	}
+
+	template<class T>
+	class TMemoryAllocator
+	{
+	public:
+		typedef T value_type;
+
+		T* allocate(size_t Count) {
+			return FMemory::MallocForType<T>(Count);
+		}
+
+		void deallocate(T* ptr, size_t) {
+			FMemory::FreeForType<T>(ptr);
+		}
+
+		template <typename _Ky>
+		operator TMemoryAllocator<_Ky>()
+		{
+			return TMemoryAllocator<_Ky>();
+		}
+	};
+
+	template <class X>
+	using UEAllocatedVector = std::vector<X, TMemoryAllocator<X>>;
 
 	inline Iterators::FSetBitIterator begin(const ContainerImpl::FBitArray& Array) { return Iterators::FSetBitIterator(Array, 0); }
 	inline Iterators::FSetBitIterator end  (const ContainerImpl::FBitArray& Array) { return Iterators::FSetBitIterator(Array, Array.Num()); }

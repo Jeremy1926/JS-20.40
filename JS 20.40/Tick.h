@@ -2,7 +2,7 @@
 #include "framework.h"
 
 namespace Tick {
-	void (*ServerReplicateActors)(void*) = decltype(ServerReplicateActors)(Jeremy::ImageBase + Jeremy::Offsets::ServerReplicateActors);
+	void (*ServerReplicateActors)(void*) = decltype(ServerReplicateActors)(Jeremy::ImageBase + 0x0);
 
 	inline void (*TickFlushOG)(UNetDriver*, float);
 	void TickFlush(UNetDriver* Driver, float DeltaTime)

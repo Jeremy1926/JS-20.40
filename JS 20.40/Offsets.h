@@ -41,6 +41,7 @@ namespace Jeremy {
         inline uint64_t StaticFindObject = 0xf14d30;
         inline uint64_t StaticLoadObject = 0x1a34ba8;
         inline uint64_t GIsClient = 0xc425a74;
+        inline uint64_t GIsServer = 0xc425a75;
         inline uint64_t GameSessionPatch = 0x1207905;
         inline uint64_t EncryptionPatch = 0x86230da;
         inline std::array<uint64_t, 4> NullFuncs = { 0x4834b50, 0x6d007f0 };

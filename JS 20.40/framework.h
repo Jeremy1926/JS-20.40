@@ -416,18 +416,6 @@ enum ESpawnActorNameMode : uint8
 	Requested
 };
 
-UObject* SDK::InternalGet(FSoftObjectPtr* Ptr, UClass* Class)
-{
-	if (!Ptr)
-		return nullptr;
-
-	auto Ret = Ptr->WeakPtr.ObjectIndex && Ptr->WeakPtr.ObjectSerialNumber ? Ptr->Get() : nullptr;
-	if ((!Ret || !Ret->IsA(Class)) && Ptr->ObjectID.AssetPathName.ComparisonIndex > 0) {
-		Ptr->WeakPtr = Ret = Utils::FindObject(Ptr->ObjectID.AssetPathName.GetRawWString().c_str(), Class);
-	}
-	return Ret;
-}
-
 struct FActorSpawnParameters
 {
 public:

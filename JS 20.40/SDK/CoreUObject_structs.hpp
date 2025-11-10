@@ -328,6 +328,16 @@ public:
 	int32                                         B;                                                 // 0x0004(0x0004)(Edit, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	int32                                         C;                                                 // 0x0008(0x0004)(Edit, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	int32                                         D;                                                 // 0x000C(0x0004)(Edit, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
+
+	inline bool operator==(const FGuid& Other) const
+	{
+		return A == Other.A && B == Other.B && C == Other.C && D == Other.D;
+	}
+
+	inline bool operator!=(const FGuid& Other) const
+	{
+		return A != Other.A || B != Other.B || C != Other.C || D != Other.D;
+	}
 };
 static_assert(alignof(FGuid) == 0x000004, "Wrong alignment on FGuid");
 static_assert(sizeof(FGuid) == 0x000010, "Wrong size on FGuid");
@@ -1648,6 +1658,23 @@ public:
 	double                                        Pitch;                                             // 0x0000(0x0008)(Edit, BlueprintVisible, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	double                                        Yaw;                                               // 0x0008(0x0008)(Edit, BlueprintVisible, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	double                                        Roll;                                              // 0x0010(0x0008)(Edit, BlueprintVisible, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
+
+	operator struct FQuat() {
+		float halfOfARadian = 0.008726646259971648f;
+		float sinPitch = sinf(Pitch * halfOfARadian),
+			sinYaw = sinf(Yaw * halfOfARadian),
+			sinRoll = sinf(Roll * halfOfARadian);
+		float cosPitch = cosf(Pitch * halfOfARadian),
+			cosYaw = cosf(Yaw * halfOfARadian),
+			cosRoll = cosf(Roll * halfOfARadian);
+
+		FQuat out{};
+		out.X = cosRoll * sinPitch * sinYaw - sinRoll * cosPitch * cosYaw;
+		out.Y = -cosRoll * sinPitch * cosYaw - sinRoll * cosPitch * sinYaw;
+		out.Z = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
+		out.W = cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw;
+		return out;
+	}
 };
 static_assert(alignof(FRotator) == 0x000008, "Wrong alignment on FRotator");
 static_assert(sizeof(FRotator) == 0x000018, "Wrong size on FRotator");
@@ -1739,6 +1766,9 @@ public:
 	uint8                                         Pad_38[0x8];                                       // 0x0038(0x0008)(Fixing Size After Last Property [ Dumper-7 ])
 	struct FVector                                Scale3D;                                           // 0x0040(0x0018)(Edit, BlueprintVisible, ZeroConstructor, SaveGame, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	uint8                                         Pad_58[0x8];                                       // 0x0058(0x0008)(Fixing Struct Size After Last Property [ Dumper-7 ])
+
+	FTransform() {}
+	FTransform(FVector loc, FQuat rot, FVector scale = { 1, 1, 1 }) : Translation(loc), Rotation(rot), Scale3D(scale) {}
 };
 static_assert(alignof(FTransform) == 0x000010, "Wrong alignment on FTransform");
 static_assert(sizeof(FTransform) == 0x000060, "Wrong size on FTransform");
