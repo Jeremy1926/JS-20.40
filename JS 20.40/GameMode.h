@@ -139,7 +139,13 @@ namespace GameMode
 			}
 
 			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer"));
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/TacticalSprintGame/Gameplay/AS_TacticalSprint.AS_TacticalSprint"));
+
+			auto TacticalSprintAbility = Utils::FindObject<UFortAbilitySet>(L"/TacticalSprintGame/Gameplay/AS_TacticalSprint.AS_TacticalSprint");
+
+			if (!TacticalSprintAbility)
+				TacticalSprintAbility = Utils::FindObject<UFortAbilitySet>(L"/TacticalSprint/Gameplay/AS_TacticalSprint.AS_TacticalSprint");
+
+			AbilitySets.Add(TacticalSprintAbility);
 			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/Ascender/Gameplay/Ascender/AS_Ascender.AS_Ascender"));
 			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/DoorBashContent/Gameplay/AS_DoorBash.AS_DoorBash"));
 			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/HillScramble/Gameplay/AS_HillScramble.AS_HillScramble"));

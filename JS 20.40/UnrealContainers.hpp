@@ -398,6 +398,11 @@ namespace UC
 
 		inline bool IsValid() const { return Data && NumElements > 0 && MaxElements >= NumElements; }
 
+		inline ArrayElementType& Get(int32 Index, int32 Size = ElementSize)
+		{
+			return *(ArrayElementType*)((uint8*)Data + Index * Size);
+		}
+
 	public:
 		inline       ArrayElementType& operator[](int32 Index)       { VerifyIndex(Index); return Data[Index]; }
 		inline const ArrayElementType& operator[](int32 Index) const { VerifyIndex(Index); return Data[Index]; }
