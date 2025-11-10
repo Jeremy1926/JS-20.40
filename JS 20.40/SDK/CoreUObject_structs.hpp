@@ -774,14 +774,18 @@ public:
 		*this /= Magnitude();
 		return *this;
 	}
-	FVector& operator*=(UnderlayingType Scalar)
+	UnderlayingType SizeSquared() const
 	{
-		*this = *this * Scalar;
-		return *this;
+		return X * X + Y * Y + Z * Z;
 	}
 	FVector& operator*=(const FVector& Other)
 	{
 		*this = *this * Other;
+		return *this;
+	}
+	FVector& operator*=(UnderlayingType Scalar)
+	{
+		*this = *this * Scalar;
 		return *this;
 	}
 	FVector& operator+=(const FVector& Other)
@@ -794,15 +798,19 @@ public:
 		*this = *this - Other;
 		return *this;
 	}
+	FVector& operator/=(const FVector& Other)
+	{
+		*this = *this / Other;
+		return *this;
+	}
 	FVector& operator/=(UnderlayingType Scalar)
 	{
 		*this = *this / Scalar;
 		return *this;
 	}
-	FVector& operator/=(const FVector& Other)
+	UnderlayingType operator|(const FVector& Other) const
 	{
-		*this = *this / Other;
-		return *this;
+		return X * Other.X + Y * Other.Y + Z * Other.Z;
 	}
 
 	UnderlayingType Dot(const FVector& Other) const
@@ -834,13 +842,13 @@ public:
 	{
 		return X != Other.X || Y != Other.Y || Z != Other.Z;
 	}
-	FVector operator*(UnderlayingType Scalar) const
-	{
-		return { X * Scalar, Y * Scalar, Z * Scalar };
-	}
 	FVector operator*(const FVector& Other) const
 	{
 		return { X * Other.X, Y * Other.Y, Z * Other.Z };
+	}
+	FVector operator*(UnderlayingType Scalar) const
+	{
+		return { X * Scalar, Y * Scalar, Z * Scalar };
 	}
 	FVector operator+(const FVector& Other) const
 	{
@@ -850,25 +858,30 @@ public:
 	{
 		return { X - Other.X, Y - Other.Y, Z - Other.Z };
 	}
-	FVector operator/(UnderlayingType Scalar) const
-	{
-		if (Scalar == 0.0f)
-			return *this;
-	
-		return { X / Scalar, Y / Scalar, Z / Scalar };
-	}
 	FVector operator/(const FVector& Other) const
 	{
-		if (Other.X == 0.0f || Other.Y == 0.0f ||Other.Z == 0.0f)
+		if (Other.X == 0. || Other.Y == 0. || Other.Z == 0.)
 			return *this;
-	
+
 		return { X / Other.X, Y / Other.Y, Z / Other.Z };
+	}
+	FVector operator/(UnderlayingType Scalar) const
+	{
+		if (Scalar == 0.)
+			return *this;
+
+		return { X / Scalar, Y / Scalar, Z / Scalar };
 	}
 	bool operator==(const FVector& Other) const
 	{
 		return X == Other.X && Y == Other.Y && Z == Other.Z;
 	}
+
+	struct FVector_NetQuantize10 Quantize10();
+	struct FVector_NetQuantize100 Quantize100();
+	struct FVector_NetQuantizeNormal QuantizeNormal();
 };
+
 static_assert(alignof(FVector) == 0x000008, "Wrong alignment on FVector");
 static_assert(sizeof(FVector) == 0x000018, "Wrong size on FVector");
 static_assert(offsetof(FVector, X) == 0x000000, "Member 'FVector::X' has a wrong offset!");

@@ -1,8 +1,8 @@
 #pragma once
 #include "framework.h"
+#include "Replication.h"
 
 namespace Tick {
-	void (*ServerReplicateActors)(void*) = decltype(ServerReplicateActors)(Jeremy::ImageBase + 0x0);
 
 	inline void (*TickFlushOG)(UNetDriver*, float);
 	void TickFlush(UNetDriver* Driver, float DeltaTime)
@@ -13,11 +13,10 @@ namespace Tick {
 		AFortGameModeAthena* GameMode = (AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode;
 		AFortGameStateAthena* GameState = (AFortGameStateAthena*)UWorld::GetWorld()->GameState;
 
-		ServerReplicateActors(Driver->ReplicationDriver);
+		Replication::ServerReplicateActors(Driver, DeltaTime);
 
 		return TickFlushOG(Driver, DeltaTime);
 	}
-
 
 	inline float GetMaxTickRate()
 	{

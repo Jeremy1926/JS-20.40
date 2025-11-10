@@ -840,12 +840,12 @@ namespace Inventory
 
 	inline void Hook()
 	{
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x22C, ServerExecuteInventoryItem, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x231, ServerExecuteInventoryItem, nullptr);
 
-		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x220, ServerHandlePickup, (LPVOID*)&ServerHandlePickupOG);
+		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x22B, ServerHandlePickup, (LPVOID*)&ServerHandlePickupOG);
 
 		Utils::ExecHook(L"/Script/FortniteGame.FortPlayerController.ServerAttemptInventoryDrop", ServerAttemptInventoryDrop);
 
-		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x12C, NetMulticast_Athena_BatchedDamageCues, (LPVOID*)&NetMulticast_Athena_BatchedDamageCuesOG);
+		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x12F, NetMulticast_Athena_BatchedDamageCues, (LPVOID*)&NetMulticast_Athena_BatchedDamageCuesOG);
 	}
 }

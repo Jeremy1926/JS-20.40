@@ -150,6 +150,7 @@
     <ClInclude Include="PC.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PropertyFixup.hpp" />
+    <ClInclude Include="Replication.h" />
     <ClInclude Include="SDK.hpp" />
     <ClInclude Include="Tick.h" />
     <ClInclude Include="UnrealContainers.hpp" />
@@ -164,6 +165,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Replication.cpp" />
     <ClCompile Include="SDK\Basic.cpp" />
     <ClCompile Include="SDK\CoreUObject_functions.cpp" />
     <ClCompile Include="SDK\Engine_functions.cpp" />

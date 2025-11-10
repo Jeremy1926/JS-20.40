@@ -150,6 +150,12 @@ namespace Utils
 		return Out;
 	}
 
+	template <typename _It>
+	static _It* GetInterface(UObject* Object)
+	{
+		return ((_It * (*)(UObject*, UClass*)) (Jeremy::ImageBase + 0xD80568))(Object, _It::StaticClass());
+	}
+
 	enum ESpawnActorNameMode : uint8
 	{
 		Required_Fatal,
@@ -364,7 +370,7 @@ public:
 	bool bArrayContextFailed;
 
 public:
-	void StepCompiledIn(void* const Result = nullptr, bool ForceExplicitProp = false);
+	inline void StepCompiledIn(void* const Result = nullptr, bool ForceExplicitProp = false);
 
 	template <typename T>
 	__forceinline T& StepCompiledInRef() {
@@ -385,7 +391,7 @@ public:
 		return MostRecentPropertyAddress ? *(T*)MostRecentPropertyAddress : TempVal;
 	}
 
-	void IncrementCode();
+	inline void IncrementCode();
 };
 
 void FFrame::StepCompiledIn(void* const Result, bool ForceExplicitProp)

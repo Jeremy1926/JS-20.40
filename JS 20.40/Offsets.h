@@ -25,8 +25,8 @@ class FFrame;
 namespace Jeremy {
     inline auto ImageBase = *(uint64_t*)(__readgsqword(0x60) + 0x10);
     namespace Offsets {
-        inline uint64_t Step = 0xf6d050;
-        inline uint64_t StepExplicitProperty = 0x8abd180;
+        inline uint64_t Step = 0xF6D050;
+        inline uint64_t StepExplicitProperty = 0x10A04C0;
         inline uint64_t GetWorldContext = 0xf124b4;
         inline uint64_t CreateNetDriverWorldContext = 0x17b0ea0;
         inline uint64_t InitHost = 0x567d4a4;
@@ -45,7 +45,26 @@ namespace Jeremy {
         inline uint64_t GameSessionPatch = 0x1207905;
         inline uint64_t EncryptionPatch = 0x86230da;
         inline std::array<uint64_t, 4> NullFuncs = { 0x4834b50, 0x6d007f0 };
-        inline std::array<uint64_t, 1> RetTrueFuncs = {  };
+        inline std::array<uint64_t, 1> RetTrueFuncs = { 0x5225ae4 };
+
+        //Replication Offsets
+
+        inline uint64_t GetViewTarget = 0xF22364;
+        inline uint64_t CallPreReplication = 0x82A7038;
+        inline uint64_t RemoveNetworkActor = 0x1273970;
+        inline uint64_t SendClientAdjustment = 0x83435F0;
+        inline uint64_t CloseActorChannel = 0x8381470;
+        inline uint64_t FindActorChannelRef = 0x83993A0;
+        inline uint64_t StartBecomingDormant = 0x838F608;
+        inline uint64_t CreateChannelByName = 0x16FDA6C;
+        inline uint64_t SetChannelActor = 0x1273EC0;
+        inline uint64_t ReplicateActor = 0x838C068;
+        inline uint64_t SetChannelActorForDestroy = 0x838E794;
+        inline uint64_t SupportsObject = 0xF31524;
+        inline uint64_t GetArchetype = 0xF830D4;
+        inline uint64_t IsNetReady = 0x8479048;
+        inline uint64_t ClientHasInitializedLevelFor = 0x8473B58;
+        inline uint64_t CloseConnection = 0x17AE720;
     };
 
     namespace Vfts {

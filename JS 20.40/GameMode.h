@@ -5,7 +5,7 @@
 #include "Inventory.h"
 #include "Abilities.h"
 
-static void* (*ApplyCharacterCustomization)(AFortPlayerStateAthena* a1, APawn* a2) = decltype(ApplyCharacterCustomization)(Jeremy::ImageBase + 0x67a40c0);
+static void* (*ApplyCharacterCustomization)(AFortPlayerStateAthena* a1, APawn* a2) = decltype(ApplyCharacterCustomization)(Jeremy::ImageBase + 0x6EEC570);
 
 namespace GameMode
 {
@@ -25,7 +25,7 @@ namespace GameMode
 		{
 			SetupPlaylist = true;
 
-			Playlist = Utils::FindObject<UFortPlaylistAthena>(L"/Game/Athena/Playlists/Showdown/Playlist_ShowdownAlt_Solo.Playlist_ShowdownAlt_Solo"); // /Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo
+			Playlist = Utils::FindObject<UFortPlaylistAthena>(L"/Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo"); // /Game/Athena/Playlists/Playlist_DefaultSolo.Playlist_DefaultSolo
 
 			if (Options::bForceRespawns)
 			{
@@ -433,17 +433,17 @@ namespace GameMode
 
 	void Hook()
 	{
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x606F168), ReadyToStartMatch, (LPVOID*)&ReadyToStartMatchOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x660b124), ReadyToStartMatch, (LPVOID*)&ReadyToStartMatchOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6074524), SpawnDefaultPawnFor, (LPVOID*)&SpawnDefaultPawnForOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6610804), SpawnDefaultPawnFor, (LPVOID*)&SpawnDefaultPawnForOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6078e88), StartNewSafeZonePhase, (LPVOID*)&StartNewSafeZonePhaseOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x66151A8), StartNewSafeZonePhase, (LPVOID*)&StartNewSafeZonePhaseOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x606df1c), PickTeam, nullptr);
+	    MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6609F0C), PickTeam, nullptr);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6076b88), StartAircraftPhase, (LPVOID*)&StartAircraftPhaseOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6612f34), StartAircraftPhase, (LPVOID*)&StartAircraftPhaseOG);
 
-		Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", OnAircraftExitedDropZone, OnAircraftExitedDropZoneOG);
-		Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftEnteredDropZone", OnAircraftEnteredDropZone, OnAircraftEnteredDropZoneOG);
+		//Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", OnAircraftExitedDropZone, OnAircraftExitedDropZoneOG);
+		//Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftEnteredDropZone", OnAircraftEnteredDropZone, OnAircraftEnteredDropZoneOG);
 	}
 }

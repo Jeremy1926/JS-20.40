@@ -3,7 +3,7 @@
 #include "framework.h"
 #include "Lategame.h"
 
-static __int64 (*CantBuild)(UWorld*, UObject*, FVector, FRotator, char, void*, char*) = decltype(CantBuild)(Jeremy::ImageBase + 0x64635A4);
+static __int64 (*CantBuild)(UWorld*, UObject*, FVector, FRotator, char, void*, char*) = decltype(CantBuild)(Jeremy::ImageBase + 0x6ac00c4);
 
 namespace PC
 {
@@ -325,7 +325,7 @@ namespace PC
 
 		Pawn->ZiplineState = State;
 
-		((void (*)(AFortPlayerPawn*))(Jeremy::ImageBase + 0x672c300))(Pawn);
+		((void (*)(AFortPlayerPawn*))(Jeremy::ImageBase + 0x6e63fb8))(Pawn);
 
 		if (State.bJumped)
 		{
@@ -366,7 +366,7 @@ namespace PC
 		Building->SetNetDormancy(ENetDormancy::DORM_DormantAll);
 		Building->EditingPlayer = nullptr;
 
-		static auto ReplaceBuildingActor = (ABuildingSMActor * (*)(ABuildingSMActor*, unsigned int, UObject*, unsigned int, int, bool, AFortPlayerControllerAthena*))(Jeremy::ImageBase + 0x62663c8);
+		static auto ReplaceBuildingActor = (ABuildingSMActor * (*)(ABuildingSMActor*, unsigned int, UObject*, unsigned int, int, bool, AFortPlayerControllerAthena*))(Jeremy::ImageBase + 0x684a4ec);
 
 		ABuildingSMActor* NewBuild = ReplaceBuildingActor(Building, 1, NewClass, Building->CurrentBuildingLevel, RotationIterations, bMirrored, PC);
 
@@ -405,9 +405,6 @@ namespace PC
 		}
 	}
 
-	inline __int64 (*SpecConstructor)(FGameplayAbilitySpec*, UObject*, int, int, UObject*) = decltype(SpecConstructor)(InSDKUtils::GetImageBase() + 0x1959d48);
-	inline FGameplayAbilitySpecHandle(*GiveAbilityAndActivateOnce)(UAbilitySystemComponent* ASC, FGameplayAbilitySpecHandle*, FGameplayAbilitySpec, __int64) = decltype(GiveAbilityAndActivateOnce)(__int64(GetModuleHandleW(0)) + 0x4f3a488);
-
 	void ServerPlayEmoteItem(AFortPlayerController* PC, UFortItemDefinition* EmoteAsset, float RandomEmoteNumber)
 	{
 		if (!PC || !EmoteAsset || !PC->MyFortPawn)
@@ -442,7 +439,7 @@ namespace PC
 		if (Ability)
 		{
 			FGameplayAbilitySpec Spec{};
-			SpecConstructor(&Spec, Ability, 1, -1, EmoteAsset);
+			AbilitySpecConstructor(&Spec, Ability, 1, -1, EmoteAsset);
 			GiveAbilityAndActivateOnce(((AFortPlayerStateAthena*)PC->PlayerState)->AbilitySystemComponent, &Spec.Handle, Spec, 0);
 		}
 	}
@@ -735,41 +732,41 @@ namespace PC
 
 	void Hook()
 	{
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x122, ServerAcknowledgePossession, (LPVOID*)&ServerAcknowledgePossessionOG);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x125, ServerAcknowledgePossession, (LPVOID*)&ServerAcknowledgePossessionOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x17c9548), ServerLoadingScreenDropped, (LPVOID*)&ServerLoadingScreenDroppedOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x21c01dc), ServerLoadingScreenDropped, (LPVOID*)&ServerLoadingScreenDroppedOG);
 
-	    MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6770fdc), ServerReadyToStartMatch, (LPVOID*)&ServerReadyToStartMatchOG);
+	    MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6eb2278), ServerReadyToStartMatch, (LPVOID*)&ServerReadyToStartMatchOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x69814D0), OnReload, (LPVOID*)&OnReloadOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x7115D20), OnReload, (LPVOID*)&OnReloadOG);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0xc77314), GetPlayerViewPoint, (LPVOID*)&GetPlayerViewPointOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0xd741bc), GetPlayerViewPoint, (LPVOID*)&GetPlayerViewPointOG);
 
-		Utils::HookVTable(UFortControllerComponent_Aircraft::GetDefaultObj(), 0x9E, ServerAttemptAircraftJump, nullptr);
+		Utils::HookVTable(UFortControllerComponent_Aircraft::GetDefaultObj(), 0x9F, ServerAttemptAircraftJump, nullptr);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6bf8a6c), ClientOnPawnDied, (LPVOID*)&ClientOnPawnDiedOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0xaa4c9d), ClientOnPawnDied, (LPVOID*)&ClientOnPawnDiedOG);
 
 		Utils::ExecHook(L"/Script/FortniteGame.FortPlayerPawn.ServerSendZiplineState", ServerSendZiplineState);
 
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x24D, ServerCreateBuildingActor, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x254, ServerCreateBuildingActor, nullptr);
 
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x254, ServerBeginEditingBuildingActor, nullptr);
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x24F, ServerEditBuildingActor, nullptr);
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x252, ServerEndEditingBuildingActor, nullptr);
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x249, ServerRepairBuildingActor, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x25B, ServerBeginEditingBuildingActor, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x256, ServerEditBuildingActor, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x259, ServerEndEditingBuildingActor, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x250, ServerRepairBuildingActor, nullptr);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6beadb8), ServerPlaySquadQuickChatMessage, nullptr); //very proper
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x56A, ServerPlaySquadQuickChatMessage, nullptr);
 
 		if (Options::bInfiniteLateGame)
 		{
-			Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x551, ServerClientIsReadyToRespawn, nullptr);
+			Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x561, ServerClientIsReadyToRespawn, nullptr);
 		}
 
 		//MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x93B2488), ServerClientIsReadyToRespawn, nullptr);
 
-		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x69b24ac), OnDamageServer, (LPVOID*)&OnDamageServerOG);
+		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x714bd34), OnDamageServer, (LPVOID*)&OnDamageServerOG);
 
-		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x1E8, ServerPlayEmoteItem, nullptr);
+		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x1ED, ServerPlayEmoteItem, nullptr);
 
 		Utils::ExecHook(L"/Script/FortniteGame.FortMissionLibrary.TeleportPlayerPawn", TeleportPlayerPawn);
 	}

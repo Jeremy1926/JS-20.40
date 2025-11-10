@@ -318,6 +318,15 @@ namespace UC
 			return true;
 		}
 
+		inline void ResetNum() {
+			NumElements = 0;
+		}
+
+		inline void Reserve(const int Num)
+		{
+			if (Num + NumElements > MaxElements) Data = FMemory::ReallocForType<ArrayElementType>(Data, MaxElements = Num + NumElements);
+		}
+
 		template <class PT>
 		ArrayElementType* Search(PT Predicate) {
 			for (auto& v : *this) {
@@ -558,11 +567,32 @@ namespace UC
 
 		inline bool IsValid() const { return Data.IsValid() && AllocationFlags.IsValid(); }
 
+		// Add this Remove method
+		void Remove(int32 Index)
+		{
+			if (!IsValidIndex(Index))
+				return;
+
+			// Add to free list
+			if (NumFreeIndices)
+				Data[FirstFreeIndex].PrevFreeIndex = Index;
+
+			auto& IndexData = Data[Index];
+			IndexData.PrevFreeIndex = -1;
+			IndexData.NextFreeIndex = NumFreeIndices > 0 ? FirstFreeIndex : -1;
+			FirstFreeIndex = Index;
+			++NumFreeIndices;
+
+			// You'll need to add a Set method to FBitArray to modify allocation flags
+			// For now, we'll skip this since FBitArray in your second project is const-only
+			// AllocationFlags.Set(Index, false);
+		}
+
 	public:
 		const ContainerImpl::FBitArray& GetAllocationFlags() const { return AllocationFlags; }
 
 	public:
-		inline       SparseArrayElementType& operator[](int32 Index)       { VerifyIndex(Index); return *reinterpret_cast<SparseArrayElementType*>(&Data.GetUnsafe(Index).ElementData); }
+		inline       SparseArrayElementType& operator[](int32 Index) { VerifyIndex(Index); return *reinterpret_cast<SparseArrayElementType*>(&Data.GetUnsafe(Index).ElementData); }
 		inline const SparseArrayElementType& operator[](int32 Index) const { VerifyIndex(Index); return *reinterpret_cast<SparseArrayElementType*>(&Data.GetUnsafe(Index).ElementData); }
 
 		inline bool operator==(const TSparseArray<SparseArrayElementType>& Other) const { return Data == Other.Data; }
@@ -570,7 +600,13 @@ namespace UC
 
 	public:
 		template<typename T> friend Iterators::TSparseArrayIterator<T> begin(const TSparseArray& Array);
-		template<typename T> friend Iterators::TSparseArrayIterator<T> end  (const TSparseArray& Array);
+		template<typename T> friend Iterators::TSparseArrayIterator<T> end(const TSparseArray& Array);
+
+		inline Iterators::TSparseArrayIterator<SparseArrayElementType> begin() { return Iterators::TSparseArrayIterator<SparseArrayElementType>(*this, GetAllocationFlags(), 0); }
+		inline Iterators::TSparseArrayIterator<SparseArrayElementType> end() { return Iterators::TSparseArrayIterator<SparseArrayElementType>(*this, GetAllocationFlags(), NumAllocated()); }
+
+		inline Iterators::TSparseArrayIterator<SparseArrayElementType> begin() const { return Iterators::TSparseArrayIterator<SparseArrayElementType>(*this, GetAllocationFlags(), 0); }
+		inline Iterators::TSparseArrayIterator<SparseArrayElementType> end() const { return Iterators::TSparseArrayIterator<SparseArrayElementType>(*this, GetAllocationFlags(), NumAllocated()); }
 	};
 
 	template<typename SetElementType>
@@ -615,19 +651,47 @@ namespace UC
 
 		inline bool IsValid() const { return Elements.IsValid(); }
 
+		inline void Remove(int32 Index) { return Elements.Remove(Index); }
+
+		template <typename ComparisonType>
+		__forceinline void Remove(const ComparisonType& Element)
+		{
+			for (auto It = this->begin(); It != this->end(); ++It) {
+				auto& Elem = *It;
+				if (Elem == Element)
+				{
+					return Remove(It.GetIndex());
+				}
+			}
+		}
+
+		template <typename _Tp>
+		__forceinline bool Contains(const _Tp& Element)
+		{
+			for (auto& SetElement : *this) {
+				if (SetElement == Element) return true;
+			}
+
+			return false;
+		}
+
 	public:
 		const ContainerImpl::FBitArray& GetAllocationFlags() const { return Elements.GetAllocationFlags(); }
 
 	public:
-		inline       SetElementType& operator[] (int32 Index)       { return Elements[Index].Value; }
+		inline       SetElementType& operator[] (int32 Index) { return Elements[Index].Value; }
 		inline const SetElementType& operator[] (int32 Index) const { return Elements[Index].Value; }
 
 		inline bool operator==(const TSet<SetElementType>& Other) const { return Elements == Other.Elements; }
 		inline bool operator!=(const TSet<SetElementType>& Other) const { return Elements != Other.Elements; }
 
 	public:
-		template<typename T> friend Iterators::TSetIterator<T> begin(const TSet& Set);
-		template<typename T> friend Iterators::TSetIterator<T> end  (const TSet& Set);
+		// Member iterator functions
+		inline Iterators::TSetIterator<SetElementType> begin() { return Iterators::TSetIterator<SetElementType>(*this, GetAllocationFlags(), 0); }
+		inline Iterators::TSetIterator<SetElementType> end() { return Iterators::TSetIterator<SetElementType>(*this, GetAllocationFlags(), NumAllocated()); }
+
+		inline Iterators::TSetIterator<SetElementType> begin() const { return Iterators::TSetIterator<SetElementType>(*this, GetAllocationFlags(), 0); }
+		inline Iterators::TSetIterator<SetElementType> end() const { return Iterators::TSetIterator<SetElementType>(*this, GetAllocationFlags(), NumAllocated()); }
 	};
 
 	template<typename KeyElementType, typename ValueElementType>

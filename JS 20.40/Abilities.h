@@ -2,9 +2,10 @@
 #include "framework.h"
 #include "pch.h"
 
-static bool (*InternalTryActivateAbility)(UAbilitySystemComponent* AbilitySystemComp, FGameplayAbilitySpecHandle AbilityToActivate, FPredictionKey InPredictionKey, UGameplayAbility** OutInstancedAbility, void* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData) = decltype(InternalTryActivateAbility)(Jeremy::ImageBase + 0x4f3b564);
-static void(*GiveAbilityOG)(UAbilitySystemComponent* This, FGameplayAbilitySpecHandle* Handle, FGameplayAbilitySpec Spec) = decltype(GiveAbilityOG)(Jeremy::ImageBase + 0x19593f0);
-static void (*AbilitySpecConstructor)(FGameplayAbilitySpec*, UGameplayAbility*, int, int, UObject*) = decltype(AbilitySpecConstructor)(Jeremy::ImageBase + 0x1959d48);
+static bool (*InternalTryActivateAbility)(UAbilitySystemComponent* AbilitySystemComp, FGameplayAbilitySpecHandle AbilityToActivate, FPredictionKey InPredictionKey, UGameplayAbility** OutInstancedAbility, void* OnGameplayAbilityEndedDelegate, const FGameplayEventData* TriggerEventData) = decltype(InternalTryActivateAbility)(Jeremy::ImageBase + 0x5251efc);
+static void(*GiveAbilityOG)(UAbilitySystemComponent* This, FGameplayAbilitySpecHandle* Handle, FGameplayAbilitySpec Spec) = decltype(GiveAbilityOG)(Jeremy::ImageBase + 0x5250bd8);
+static void (*AbilitySpecConstructor)(FGameplayAbilitySpec*, UGameplayAbility*, int, int, UObject*) = decltype(AbilitySpecConstructor)(Jeremy::ImageBase + 0x5247bc8);
+inline FGameplayAbilitySpecHandle(*GiveAbilityAndActivateOnce)(UAbilitySystemComponent* ASC, FGameplayAbilitySpecHandle*, FGameplayAbilitySpec, __int64) = decltype(GiveAbilityAndActivateOnce)(__int64(GetModuleHandleW(0)) + 0x5250cf8);
 
 namespace Abilities
 {
@@ -78,6 +79,6 @@ namespace Abilities
 
 	void Hook()
 	{
-		Utils::HookEvery<UAbilitySystemComponent>(0x108, InternalServerTryActiveAbility);
+		Utils::HookEvery<UAbilitySystemComponent>(0x10b, InternalServerTryActiveAbility);
 	}
 }
