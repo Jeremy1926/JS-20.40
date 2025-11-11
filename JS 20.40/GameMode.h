@@ -4,6 +4,7 @@
 #include "Offsets.h"
 #include "Inventory.h"
 #include "Abilities.h"
+#include <fstream>
 
 static void* (*ApplyCharacterCustomization)(AFortPlayerStateAthena* a1, APawn* a2) = decltype(ApplyCharacterCustomization)(Jeremy::ImageBase + 0x6EEC570);
 
@@ -138,41 +139,6 @@ namespace GameMode
 				GameState->AdditionalPlaylistLevelsStreamed.Add(NewLevel);
 			}
 
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer"));
-
-			auto TacticalSprintAbility = Utils::FindObject<UFortAbilitySet>(L"/TacticalSprintGame/Gameplay/AS_TacticalSprint.AS_TacticalSprint");
-
-			if (!TacticalSprintAbility)
-				TacticalSprintAbility = Utils::FindObject<UFortAbilitySet>(L"/TacticalSprint/Gameplay/AS_TacticalSprint.AS_TacticalSprint");
-
-			AbilitySets.Add(TacticalSprintAbility);
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/Ascender/Gameplay/Ascender/AS_Ascender.AS_Ascender"));
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/DoorBashContent/Gameplay/AS_DoorBash.AS_DoorBash"));
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/HillScramble/Gameplay/AS_HillScramble.AS_HillScramble"));
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/SlideImpulse/Gameplay/AS_SlideImpulse.AS_SlideImpulse"));
-			AbilitySets.Add(Utils::FindObject<UFortAbilitySet>(L"/RealitySeedGameplay/Environment/Foliage/GAS_Athena_RealitySapling.GAS_Athena_RealitySapling"));
-
-			for (int i = 0; i < UObject::GObjects->Num(); i++)
-			{
-				auto Object = UObject::GObjects->GetByIndex(i);
-
-				if (!Object || !Object->Class || Object->IsDefaultObject())
-					continue;
-
-				if (auto GameFeatureData = Object->Cast<UFortGameFeatureData>())
-				{
-					auto LootTableData = GameFeatureData->DefaultLootTableData;
-					auto AbilitySet = Utils::FindObject<UFortAbilitySet>(GameFeatureData->PlayerAbilitySet.ObjectID.AssetPathName.GetRawWString().c_str());
-
-					if (AbilitySet)
-					{
-						AbilitySet->AddToRoot();
-						AbilitySets.Add(AbilitySet);
-					}
-
-				}
-			}
-
 			GameState->OnRep_AdditionalPlaylistLevelsStreamed();
 			GameState->OnFinishedStreamingAdditionalPlaylistLevel();
 
@@ -262,8 +228,6 @@ namespace GameMode
 				Inventory::GiveItem(NewPlayer, GameMode->StartingItems[i].Item, GameMode->StartingItems[i].Count, 0);
 			}
 		}
-
-		Abilities::GiveAbilitySet(Utils::FindObject<UFortAbilitySet>(L"/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer"), PlayerState);
 
 		ApplyCharacterCustomization(PlayerState, Pawn);
 

@@ -12,6 +12,19 @@ namespace PC
 	{
 		PC->AcknowledgedPawn = Pawn;
 
+		static void* (*GetInterface)(void*, void*) = decltype(GetInterface)(Jeremy::ImageBase + 0xD80568);
+
+		TScriptInterface<IAbilitySystemInterface> Abilities{};
+		Abilities.ObjectPointer = PC->PlayerState;
+		Abilities.InterfacePointer = GetInterface(PC->PlayerState, IAbilitySystemInterface::StaticClass());
+
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer")), nullptr);
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/TacticalSprint/Gameplay/AS_TacticalSprint.AS_TacticalSprint")), nullptr);
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/Ascender/Gameplay/Ascender/AS_Ascender.AS_Ascender")), nullptr);
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/DoorBashContent/Gameplay/AS_DoorBash.AS_DoorBash")), nullptr);
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/HillScramble/Gameplay/AS_HillScramble.AS_HillScramble")), nullptr);
+		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/SlideImpulse/Gameplay/AS_SlideImpulse.AS_SlideImpulse")), nullptr);
+
 		return ServerAcknowledgePossessionOG(PC, Pawn);
 	}
 
