@@ -1,0 +1,44 @@
+#pragma once
+#include "pch.h"
+#include "framework.h"
+
+class Looting {
+public:
+	static inline UEAllocatedVector<FFortLootTierData*> TierDataAllGroups;
+	static inline UEAllocatedVector<FFortLootPackageData*> LPGroupsAll;
+private:
+	static bool SpawnLootHook(ABuildingContainer*);
+public:
+	static void SpawnLoot(FName&, FVector);
+	static void SpawnFloorLootForContainer(UBlueprintGeneratedClass*);
+private:
+	static bool ServerOnAttemptInteract(ABuildingContainer*, AFortPlayerPawn*);
+	static void SetupLDSForPackage(TArray<FFortItemEntry>&, SDK::FName, int, FName, int WorldLevel = ((AFortGameStateAthena*)UWorld::GetWorld()->GameState)->WorldLevel);
+	template <typename T>
+	static T* PickWeighted(UEAllocatedVector<T*>& Map, float (*RandFunc)(float), bool bCheckZero = true) {
+		float TotalWeight = std::accumulate(Map.begin(), Map.end(), 0.0f, [&](float acc, T*& p) { return acc + p->Weight; });
+		float RandomNumber = RandFunc(TotalWeight);
+
+		for (auto& Element : Map)
+		{
+			float Weight = Element->Weight;
+			if (bCheckZero && Weight == 0)
+				continue;
+
+			if (RandomNumber <= Weight) return Element;
+
+			RandomNumber -= Weight;
+		}
+
+		return nullptr;
+	}
+public:
+	static TArray<FFortItemEntry> ChooseLootForContainer(FName, int = -1, int = ((AFortGameStateAthena*)UWorld::GetWorld()->GameState)->WorldLevel);
+
+	static void Hook();
+private:
+	static bool PickLootDrops(UObject*, FFrame&, bool*);
+	static AFortPickup* SpawnPickup(UObject*, FFrame&, AFortPickup**);
+	static AFortPickup* K2_SpawnPickupInWorld(UObject*, FFrame&, AFortPickup**);
+	static AFortPickup* SpawnItemVariantPickupInWorld(UObject*, FFrame&, AFortPickup**);
+};

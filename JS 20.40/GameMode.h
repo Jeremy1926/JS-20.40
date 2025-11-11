@@ -5,6 +5,7 @@
 #include "Inventory.h"
 #include "Abilities.h"
 #include <fstream>
+#include "Looting.h"
 
 static void* (*ApplyCharacterCustomization)(AFortPlayerStateAthena* a1, APawn* a2) = decltype(ApplyCharacterCustomization)(Jeremy::ImageBase + 0x6EEC570);
 
@@ -13,12 +14,11 @@ namespace GameMode
 	uint8 NextIdx = 3;
 	int CurrentPlayersOnTeam = 0;
 	int MaxPlayersOnTeam = 1;
+	UFortPlaylistAthena* Playlist;
 
 	inline bool (*ReadyToStartMatchOG)(AFortGameModeAthena* GameMode);
 	inline bool ReadyToStartMatch(AFortGameModeAthena* GameMode)
 	{
-		UFortPlaylistAthena* Playlist;
-
 		AFortGameStateAthena* GameState = (AFortGameStateAthena*)UWorld::GetWorld()->GameState;
 
 		static bool SetupPlaylist = false;
@@ -141,6 +141,78 @@ namespace GameMode
 
 			GameState->OnRep_AdditionalPlaylistLevelsStreamed();
 			GameState->OnFinishedStreamingAdditionalPlaylistLevel();
+
+
+			auto Starts = Utils::GetAll<AFortPlayerStartWarmup>();
+			auto StartsNum = Starts.Num();
+			Starts.Free();
+
+			auto AddToTierData = [&](UDataTable* Table) {
+				for (auto& [Key, Val] : (TMap<FName, FFortLootTierData*>) Table->RowMap) {
+					Looting::TierDataAllGroups.push_back(Val);
+				}
+				};
+
+
+			auto AddToPackages = [&](UDataTable* Table) {
+				//Table->AddToRoot();
+				for (auto& [Key, Val] : (TMap<FName, FFortLootPackageData*>) Table->RowMap) {
+					Looting::LPGroupsAll.push_back(Val);
+				}
+				};
+
+
+			auto LootTierData = Playlist->LootTierData.Get();
+			if (!LootTierData)
+				LootTierData = Utils::FindObject<UDataTable>(L"/Game/Items/Datatables/AthenaLootTierData_Client.AthenaLootTierData_Client");
+			if (LootTierData)
+				AddToTierData(LootTierData);
+
+
+			auto LootPackages = Playlist->LootPackages.Get();
+			if (!LootPackages) LootPackages = Utils::FindObject<UDataTable>(L"/Game/Items/Datatables/AthenaLootPackages_Client.AthenaLootPackages_Client");
+			if (LootPackages)
+				AddToPackages(LootPackages);
+
+
+			for (int i = 0; i < UObject::GObjects->Num(); i++)
+			{
+				auto Object = UObject::GObjects->GetByIndex(i);
+
+				if (!Object || !Object->Class || Object->IsDefaultObject())
+					continue;
+
+				if (auto GameFeatureData = Object->Cast<UFortGameFeatureData>())
+				{
+					auto LootTableData = GameFeatureData->DefaultLootTableData;
+					auto LTDFeatureData = LootTableData.LootTierData.Get();
+					auto AbilitySet = GameFeatureData->PlayerAbilitySet.Get();
+					auto LootPackageData = LootTableData.LootPackageData.Get();
+					auto WumbaData = GameFeatureData->WeaponUpgradesDataTable.Get();
+					if (AbilitySet) {
+						AbilitySets.Add(AbilitySet);
+					}
+					if (LTDFeatureData) {
+						AddToTierData(LTDFeatureData);
+
+						for (auto& Tag : Playlist->GameplayTagContainer.GameplayTags)
+							for (auto& Override : GameFeatureData->PlaylistOverrideLootTableData)
+								if (Tag.TagName == Override.First.TagName)
+									AddToTierData(Override.Second.LootTierData.Get());
+					}
+					if (LootPackageData) {
+						AddToPackages(LootPackageData);
+
+						for (auto& Tag : Playlist->GameplayTagContainer.GameplayTags)
+							for (auto& Override : GameFeatureData->PlaylistOverrideLootTableData)
+								if (Tag.TagName == Override.First.TagName)
+									AddToPackages(Override.Second.LootPackageData.Get());
+					}
+				}
+			}
+
+	        Looting::SpawnFloorLootForContainer(Utils::FindObject<UBlueprintGeneratedClass>(L"/Game/Athena/Environments/Blueprints/Tiered_Athena_FloorLoot_Warmup.Tiered_Athena_FloorLoot_Warmup_C"));
+			Looting::SpawnFloorLootForContainer(Utils::FindObject<UBlueprintGeneratedClass>(L"/Game/Athena/Environments/Blueprints/Tiered_Athena_FloorLoot_01.Tiered_Athena_FloorLoot_01_C"));
 
 			GameMode->bWorldIsReady = true;
 
@@ -275,36 +347,38 @@ namespace GameMode
 		}
 	}
 
-	//void OnAircraftEnteredDropZone(UObject* Context, FFrame& Stack) {
-	//	AFortAthenaAircraft* Aircraft;
-	//	Stack.StepCompiledIn(&Aircraft);
-	//	Stack.IncrementCode();
+	static void (*OnAircraftEnteredDropZoneOG)(UObject* Context, FFrame& Stack);
+	inline void OnAircraftEnteredDropZone(UObject* Context, FFrame& Stack) {
+		AFortAthenaAircraft* Aircraft;
+		Stack.StepCompiledIn(&Aircraft);
+		Stack.IncrementCode();
 
-	//	auto GameMode = (AFortGameModeAthena*)Context;
-	//	auto GameState = (AFortGameStateAthena*)GameMode->GameState;
+		auto GameMode = (AFortGameModeAthena*)Context;
+		auto GameState = (AFortGameStateAthena*)GameMode->GameState;
 
-	//	callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftEnteredDropZone, Aircraft);
-	//}
+		return OnAircraftEnteredDropZoneOG(Context, Stack);
+	}
 
-	//void OnAircraftExitedDropZone(UObject* Context, FFrame& Stack)
-	//{
-	//	AFortAthenaAircraft* Aircraft;
-	//	Stack.StepCompiledIn(&Aircraft);
-	//	Stack.IncrementCode();
+	static void (*OnAircraftExitedDropZoneOG)(UObject* Context, FFrame& Stack);
+	inline void OnAircraftExitedDropZone(UObject* Context, FFrame& Stack)
+	{
+		AFortAthenaAircraft* Aircraft;
+		Stack.StepCompiledIn(&Aircraft);
+		Stack.IncrementCode();
 
-	//	auto GameMode = (AFortGameModeAthena*)Context;
-	//	auto GameState = (AFortGameStateAthena*)GameMode->GameState;
+		auto GameMode = (AFortGameModeAthena*)Context;
+		auto GameState = (AFortGameStateAthena*)GameMode->GameState;
 
-	//	for (auto& Player : GameMode->AlivePlayers)
-	//	{
-	//		if (Player->IsInAircraft())
-	//		{
-	//			Player->GetAircraftComponent()->ServerAttemptAircraftJump({});
-	//		}
-	//	}
+		for (auto& Player : GameMode->AlivePlayers)
+		{
+			if (Player->IsInAircraft())
+			{
+				Player->GetAircraftComponent()->ServerAttemptAircraftJump({});
+			}
+		}
 
-	//	callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftExitedDropZone, Aircraft);
-	//}
+		return OnAircraftExitedDropZoneOG(Context, Stack);
+	}
 
 	void (*StartNewSafeZonePhaseOG)(AFortGameModeAthena*, int);
 	void StartNewSafeZonePhase(AFortGameModeAthena* GameMode, int a2)
@@ -419,7 +493,7 @@ namespace GameMode
 
 		MH_CreateHook((LPVOID)(Jeremy::ImageBase + 0x6612f34), StartAircraftPhase, (LPVOID*)&StartAircraftPhaseOG);
 
-		//Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", OnAircraftExitedDropZone, OnAircraftExitedDropZoneOG);
-		//Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftEnteredDropZone", OnAircraftEnteredDropZone, OnAircraftEnteredDropZoneOG);
+		Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftExitedDropZone", OnAircraftExitedDropZone, OnAircraftExitedDropZoneOG);
+		Utils::ExecHook(L"/Script/FortniteGame.FortGameModeAthena.OnAircraftEnteredDropZone", OnAircraftEnteredDropZone, OnAircraftEnteredDropZoneOG);
 	}
 }

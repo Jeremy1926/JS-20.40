@@ -21,7 +21,7 @@ namespace PC
 		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/Game/Abilities/Player/Generic/Traits/DefaultPlayer/GAS_AthenaPlayer.GAS_AthenaPlayer")), nullptr);
 		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/TacticalSprint/Gameplay/AS_TacticalSprint.AS_TacticalSprint")), nullptr);
 		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/Ascender/Gameplay/Ascender/AS_Ascender.AS_Ascender")), nullptr);
-		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/DoorBashContent/Gameplay/AS_DoorBash.AS_DoorBash")), nullptr);
+		//UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/DoorBashContent/Gameplay/AS_DoorBash.AS_DoorBash")), nullptr);
 		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/HillScramble/Gameplay/AS_HillScramble.AS_HillScramble")), nullptr);
 		UFortKismetLibrary::EquipFortAbilitySet(Abilities, Utils::FindObject<UFortAbilitySet>(TEXT("/SlideImpulse/Gameplay/AS_SlideImpulse.AS_SlideImpulse")), nullptr);
 
@@ -34,6 +34,9 @@ namespace PC
 		AFortGameStateAthena* GameState = (AFortGameStateAthena*)UWorld::GetWorld()->GameState;
 		AFortGameModeAthena* GameMode = (AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode;
 		auto Pawn = (AFortPlayerPawn*)PC->Pawn;
+
+		/*Looting::SpawnFloorLootForContainer(Utils::FindObject<UBlueprintGeneratedClass>(L"/Game/Athena/Environments/Blueprints/Tiered_Athena_FloorLoot_Warmup.Tiered_Athena_FloorLoot_Warmup_C"));
+		Looting::SpawnFloorLootForContainer(Utils::FindObject<UBlueprintGeneratedClass>(L"/Game/Athena/Environments/Blueprints/Tiered_Athena_FloorLoot_01.Tiered_Athena_FloorLoot_01_C"));*/
 
 		return ServerLoadingScreenDroppedOG(PC);
 	}

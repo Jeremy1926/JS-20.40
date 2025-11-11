@@ -29,6 +29,7 @@ void Main()
     PC::Hook();
     Abilities::Hook();
     Inventory::Hook();
+    Looting::Hook();
     Vehicles::Hook();
     Misc::Hook();
     Net::Hook();

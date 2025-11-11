@@ -116,5 +116,10 @@ bool FWeakObjectPtr::operator!=(const class UObject* Other) const
 }
 
 
+FWeakObjectPtr::FWeakObjectPtr(UObject* Object) {
+	ObjectIndex = Object->Index;
+	ObjectSerialNumber = UObject::GObjects->GetItemByIndex(Object->Index)->SerialNumber;
+}
+
 }
 

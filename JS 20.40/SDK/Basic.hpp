@@ -498,6 +498,14 @@ public:
 	int32                                         ObjectIndex;                                       // 0x0000(0x0004)(NOT AUTO-GENERATED PROPERTY)
 	int32                                         ObjectSerialNumber;                                // 0x0004(0x0004)(NOT AUTO-GENERATED PROPERTY)
 
+
+	FWeakObjectPtr(int32 Index = 0, int32 SerialNumber = 0)
+		: ObjectIndex(Index), ObjectSerialNumber(SerialNumber)
+	{
+	}
+
+	FWeakObjectPtr(UObject*);
+
 public:
 	class UObject* Get() const;
 	class UObject* operator->() const;
@@ -601,17 +609,23 @@ class FSoftObjectPtr : public TPersistentObjectPtr<FakeSoftObjectPtr::FSoftObjec
 {
 };
 
+UObject* InternalGet(FSoftObjectPtr* Ptr, UClass* Class);
+
 template<typename UEType>
 class TSoftObjectPtr : public FSoftObjectPtr
 {
 public:
 	UEType* Get() const
 	{
-		return static_cast<UEType*>(TPersistentObjectPtr::Get());
+		return (UEType*)InternalGet((FSoftObjectPtr*)this, UEType::StaticClass());
 	}
 	UEType* operator->() const
 	{
-		return static_cast<UEType*>(TPersistentObjectPtr::Get());
+		return Get();
+	}
+	operator UEType* () const
+	{
+		return Get();
 	}
 };
 

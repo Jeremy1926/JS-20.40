@@ -101,6 +101,9 @@
     <ClCompile Include="Replication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Looting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="NameCollisions.inl">

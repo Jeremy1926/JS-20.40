@@ -10,9 +10,6 @@ namespace Tick {
 		if (!Driver)
 			return;
 
-		AFortGameModeAthena* GameMode = (AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode;
-		AFortGameStateAthena* GameState = (AFortGameStateAthena*)UWorld::GetWorld()->GameState;
-
 		Replication::ServerReplicateActors(Driver, DeltaTime);
 
 		return TickFlushOG(Driver, DeltaTime);

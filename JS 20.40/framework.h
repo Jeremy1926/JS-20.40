@@ -344,11 +344,12 @@ inline FFortRangedWeaponStats* GetStats(UFortWeaponItemDefinition* Def)
 	return Val ? *(FFortRangedWeaponStats**)Val : nullptr;
 }
 
-class alignas(0x8) FOutputDevice
+class FOutputDevice
 {
 public:
 	bool bSuppressEventTag;
 	bool bAutoEmitLineTerminator;
+	uint8_t _Padding1[0x6];
 };
 
 class FFrame : public FOutputDevice
@@ -359,68 +360,36 @@ public:
 	UObject* Object;
 	uint8* Code;
 	uint8* Locals;
-	void* MostRecentProperty;
+	FProperty* MostRecentProperty;
 	uint8_t* MostRecentPropertyAddress;
-	uint8_t _Padding1[0x40];
-	const UField* PropertyChainForCompiledIn;
+	uint8_t _Padding1[0x48];
+	FField* PropertyChainForCompiledIn;
 
 public:
-	inline UFunction* GetCurrentNativeFunction()
-	{
-		UFunction* Func = *(UFunction**)(__int64(this) + (0x90));
+	inline void StepCompiledIn(void* const Result, bool ForceExplicitProp = false);
 
-		return Func;
-	}
-
-	inline void StepCompiledIn(void* const Result = nullptr)
-	{
-		if (Code)
-		{
-			((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, Result);
-		}
-		else
-		{
-			const UField* _Prop = *(const UField**)(__int64(this) + (0x88));
-			if (_Prop)
-			{
-				*(const UField**)(__int64(this) + (0x88)) = _Prop->Next;
-				((void (*)(FFrame*, void* const, const UField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, Result, _Prop);
-			}
-		}
-	}
-
-
-	inline void* StepCompiledInRefInternal(void* _Tm)
-	{
+	template <typename T>
+	inline T& StepCompiledInRef() {
+		T TempVal{};
 		MostRecentPropertyAddress = nullptr;
 
 		if (Code)
 		{
-			((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, _Tm);
+			((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, &TempVal);
 		}
 		else
 		{
-			const UField* _Prop = *(const UField**)(__int64(this) + (0x88));
-			*(const UField**)(__int64(this) + (0x88)) = _Prop->Next;
-			((void (*)(FFrame*, void* const, const UField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, _Tm, _Prop);
+			FField* _Prop = PropertyChainForCompiledIn;
+			PropertyChainForCompiledIn = _Prop->Next;
+			((void (*)(FFrame*, void* const, FField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, &TempVal, _Prop);
 		}
 
-		return MostRecentPropertyAddress ? MostRecentPropertyAddress : _Tm;
+		return MostRecentPropertyAddress ? *(T*)MostRecentPropertyAddress : TempVal;
 	}
 
-	template <typename T>
-	inline T& StepCompiledInRef()
-	{
-		T TempVal{};
-		return *(T*)StepCompiledInRefInternal(&TempVal);
-	}
-
-	inline void IncrementCode()
-	{
-		if (Code)
-			Code++;
-	}
+	inline void IncrementCode();
 };
+
 
 enum ESpawnActorNameMode : uint8
 {
@@ -451,3 +420,34 @@ public:
 	ESpawnActorNameMode NameMode;
 	EObjectFlags ObjectFlags;
 };
+
+inline void FFrame::StepCompiledIn(void* const Result, bool ForceExplicitProp)
+{
+	if (Code && !ForceExplicitProp)
+	{
+		((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, Result);
+	}
+	else
+	{
+		FField* _Prop = PropertyChainForCompiledIn;
+		PropertyChainForCompiledIn = _Prop->Next;
+		((void (*)(FFrame*, void* const, FField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, Result, _Prop);
+	}
+}
+
+
+inline void FFrame::IncrementCode() {
+	Code = (uint8_t*)(__int64(Code) + (bool)Code);
+}
+
+inline UObject* SDK::InternalGet(FSoftObjectPtr* Ptr, UClass* Class)
+{
+	if (!Ptr)
+		return nullptr;
+
+	auto Ret = Ptr->WeakPtr.ObjectIndex && Ptr->WeakPtr.ObjectSerialNumber ? Ptr->Get() : nullptr;
+	if ((!Ret || !Ret->IsA(Class)) && Ptr->ObjectID.AssetPathName.ComparisonIndex > 0) {
+		Ptr->WeakPtr = Ret = Utils::FindObject(Ptr->ObjectID.AssetPathName.GetRawWString().c_str(), Class);
+	}
+	return Ret;
+}

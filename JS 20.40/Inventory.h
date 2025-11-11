@@ -536,6 +536,182 @@ namespace Inventory
 		Pickup->OnRep_bPickedUp();
 	}
 
+
+	/*inline void (*ServerHandlePickupOG)(AFortPlayerPawn* Pawn, AFortPickup* Pickup, float InFlyTime, FVector InStartDirection, bool bPlayPickupSound);
+	inline void ServerHandlePickup(AFortPlayerPawnAthena* Pawn, AFortPickup* Pickup, float InFlyTime, const FVector& InStartDirection, bool bPlayPickupSound)
+	{
+		if (!Pickup || !Pawn || !Pawn->Controller || Pickup->bPickedUp)
+			return;
+
+		AFortPlayerControllerAthena* PC = (AFortPlayerControllerAthena*)Pawn->Controller;
+
+		UFortItemDefinition* Def = Pickup->PrimaryPickupItemEntry.ItemDefinition;
+		FFortItemEntry* FoundEntry = nullptr;
+		FFortItemEntry& PickupEntry = Pickup->PrimaryPickupItemEntry;
+		float MaxStackSize = GetMaxStack(Def);
+		bool Stackable = Def->IsStackable();
+		UFortItemDefinition* PickupItemDef = PickupEntry.ItemDefinition;
+		bool Found = false;
+		FFortItemEntry* GaveEntry = nullptr;
+
+		if (IsInventoryFull(PC))
+		{
+			if (Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortAmmoItemDefinition::StaticClass()) || Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortResourceItemDefinition::StaticClass()))
+			{
+				GiveItemStack(PC, Pickup->PrimaryPickupItemEntry.ItemDefinition, Pickup->PrimaryPickupItemEntry.Count, Pickup->PrimaryPickupItemEntry.LoadedAmmo);
+
+				Pickup->PickupLocationData.bPlayPickupSound = bPlayPickupSound;
+				Pickup->PickupLocationData.FlyTime = 0.3f;
+				Pickup->PickupLocationData.ItemOwner = Pawn;
+				Pickup->PickupLocationData.PickupGuid = Pickup->PrimaryPickupItemEntry.ItemGuid;
+				Pickup->PickupLocationData.PickupTarget = Pawn;
+				Pickup->OnRep_PickupLocationData();
+
+				Pickup->bPickedUp = true;
+				Pickup->OnRep_bPickedUp();
+				return;
+			}
+
+			if (!Pawn->CurrentWeapon->WeaponData->IsA(UFortWeaponMeleeItemDefinition::StaticClass()))
+			{
+				if (Stackable)
+				{
+					for (size_t i = 0; i < PC->WorldInventory->Inventory.ReplicatedEntries.Num(); i++)
+					{
+						FFortItemEntry& Entry = PC->WorldInventory->Inventory.ReplicatedEntries[i];
+
+						if (Entry.ItemDefinition == PickupItemDef)
+						{
+							Found = true;
+							if ((MaxStackSize - Entry.Count) > 0)
+							{
+								Entry.Count += PickupEntry.Count;
+
+								if (Entry.Count > MaxStackSize)
+								{
+									Utils::SpawnStack((AFortPlayerPawnAthena*)PC->Pawn, PickupItemDef, Entry.Count - MaxStackSize);
+									Entry.Count = MaxStackSize;
+								}
+
+								PC->WorldInventory->Inventory.MarkItemDirty(Entry);
+							}
+							else
+							{
+								if (IsPrimaryQuickbar(PickupItemDef))
+								{
+									GaveEntry = GiveStack(PC, PickupItemDef, PickupEntry.Count);
+								}
+							}
+							break;
+						}
+					}
+					if (!Found)
+					{
+						for (size_t i = 0; i < PC->WorldInventory->Inventory.ReplicatedEntries.Num(); i++)
+						{
+							if (CompareGuids(PC->WorldInventory->Inventory.ReplicatedEntries[i].ItemGuid, Pawn->CurrentWeapon->GetInventoryGUID()))
+							{
+								PC->ServerAttemptInventoryDrop(Pawn->CurrentWeapon->GetInventoryGUID(), PC->WorldInventory->Inventory.ReplicatedEntries[i].Count, false);
+								break;
+							}
+						}
+						GaveEntry = GiveStack(PC, PickupItemDef, PickupEntry.Count, false, 0, true);
+					}
+
+					Pickup->PickupLocationData.bPlayPickupSound = bPlayPickupSound;
+					Pickup->PickupLocationData.FlyTime = 0.3f;
+					Pickup->PickupLocationData.ItemOwner = Pawn;
+					Pickup->PickupLocationData.PickupGuid = Pickup->PrimaryPickupItemEntry.ItemGuid;
+					Pickup->PickupLocationData.PickupTarget = Pawn;
+					Pickup->OnRep_PickupLocationData();
+
+					Pickup->bPickedUp = true;
+					Pickup->OnRep_bPickedUp();
+					return;
+				}
+
+				for (size_t i = 0; i < PC->WorldInventory->Inventory.ReplicatedEntries.Num(); i++)
+				{
+					if (CompareGuids(PC->WorldInventory->Inventory.ReplicatedEntries[i].ItemGuid, Pawn->CurrentWeapon->GetInventoryGUID()))
+					{
+						PC->ServerAttemptInventoryDrop(Pawn->CurrentWeapon->GetInventoryGUID(), PC->WorldInventory->Inventory.ReplicatedEntries[i].Count, false);
+						break;
+					}
+				}
+			}
+		}
+
+		if (!IsInventoryFull(PC))
+		{
+			if (Stackable && !Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortAmmoItemDefinition::StaticClass()) || Stackable && !Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortResourceItemDefinition::StaticClass()))
+			{
+				for (size_t i = 0; i < PC->WorldInventory->Inventory.ReplicatedEntries.Num(); i++)
+				{
+					FFortItemEntry& Entry = PC->WorldInventory->Inventory.ReplicatedEntries[i];
+
+					if (Entry.ItemDefinition == PickupItemDef)
+					{
+						Found = true;
+						if ((MaxStackSize - Entry.Count) > 0)
+						{
+							Entry.Count += PickupEntry.Count;
+
+							if (Entry.Count > MaxStackSize)
+							{
+								Utils::SpawnStack((AFortPlayerPawnAthena*)PC->Pawn, PickupItemDef, Entry.Count - MaxStackSize);
+								Entry.Count = MaxStackSize;
+							}
+
+							PC->WorldInventory->Inventory.MarkItemDirty(Entry);
+						}
+						else
+						{
+							if (IsPrimaryQuickbar(PickupItemDef))
+							{
+								GaveEntry = GiveStack(PC, PickupItemDef, PickupEntry.Count);
+							}
+						}
+						break;
+					}
+				}
+
+				if (!Found)
+				{
+					GaveEntry = GiveStack(PC, PickupItemDef, PickupEntry.Count, false, 0, true);
+				}
+
+				Pickup->PickupLocationData.bPlayPickupSound = bPlayPickupSound;
+				Pickup->PickupLocationData.FlyTime = 0.3f;
+				Pickup->PickupLocationData.ItemOwner = Pawn;
+				Pickup->PickupLocationData.PickupGuid = Pickup->PrimaryPickupItemEntry.ItemGuid;
+				Pickup->PickupLocationData.PickupTarget = Pawn;
+				Pickup->OnRep_PickupLocationData();
+
+				Pickup->bPickedUp = true;
+				Pickup->OnRep_bPickedUp();
+				return;
+			}
+
+			if (Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortAmmoItemDefinition::StaticClass()) || Pickup->PrimaryPickupItemEntry.ItemDefinition->IsA(UFortResourceItemDefinition::StaticClass()))
+			{
+				GiveItemStack(PC, Pickup->PrimaryPickupItemEntry.ItemDefinition, Pickup->PrimaryPickupItemEntry.Count, Pickup->PrimaryPickupItemEntry.LoadedAmmo);
+			}
+			else {
+				GiveItem(PC, Pickup->PrimaryPickupItemEntry.ItemDefinition, Pickup->PrimaryPickupItemEntry.Count, Pickup->PrimaryPickupItemEntry.LoadedAmmo);
+			}
+		}
+
+		Pickup->PickupLocationData.bPlayPickupSound = bPlayPickupSound;
+		Pickup->PickupLocationData.FlyTime = 0.3f;
+		Pickup->PickupLocationData.ItemOwner = Pawn;
+		Pickup->PickupLocationData.PickupGuid = Pickup->PrimaryPickupItemEntry.ItemGuid;
+		Pickup->PickupLocationData.PickupTarget = Pawn;
+		Pickup->OnRep_PickupLocationData();
+
+		Pickup->bPickedUp = true;
+		Pickup->OnRep_bPickedUp();
+	}*/
+
 	inline int GetLevel(const FDataTableCategoryHandle& CategoryHandle)
 	{
 		auto GameMode = (AFortGameModeAthena*)UWorld::GetWorld()->AuthorityGameMode;
@@ -838,13 +1014,108 @@ namespace Inventory
 		TriggerInventoryUpdate(PlayerController, nullptr);
 	}
 
+	inline void InternalPickup(AFortPlayerControllerAthena* PlayerController, FFortItemEntry PickupEntry)
+	{
+		auto MaxStack = (int32)Utils::EvaluateScalableFloat(PickupEntry.ItemDefinition->MaxStackSize);
+		int ItemCount = 0;
+		for (auto& Item : PlayerController->WorldInventory->Inventory.ReplicatedEntries)
+		{
+			if (Inventory::GetQuickbar(Item.ItemDefinition) == EFortQuickBars::Primary)
+				ItemCount += ((UFortWorldItemDefinition*)Item.ItemDefinition)->NumberOfSlotsToTake;
+		}
+		auto GiveOrSwap = [&]() {
+			if (ItemCount == 5 && Inventory::GetQuickbar(PickupEntry.ItemDefinition) == EFortQuickBars::Primary) {
+				if (Inventory::GetQuickbar(PlayerController->MyFortPawn->CurrentWeapon->WeaponData) == EFortQuickBars::Primary) {
+					auto itemEntry = PlayerController->WorldInventory->Inventory.ReplicatedEntries.Search1([PlayerController](FFortItemEntry& entry)
+						{ return entry.ItemGuid == PlayerController->MyFortPawn->CurrentWeapon->ItemEntryGuid; });
+					Inventory::SpawnPickup(PlayerController->GetViewTarget()->K2_GetActorLocation(), *itemEntry, EFortPickupSourceTypeFlag::Player, EFortPickupSpawnSource::Unset, PlayerController->MyFortPawn);
+					Inventory::Remove(PlayerController, PlayerController->MyFortPawn->CurrentWeapon->ItemEntryGuid);
+					Inventory::GiveItem(PlayerController, PickupEntry.ItemDefinition, PickupEntry.Count, true);
+				}
+				else {
+					Inventory::SpawnPickup(PlayerController->GetViewTarget()->K2_GetActorLocation(), (FFortItemEntry&)PickupEntry, EFortPickupSourceTypeFlag::Player, EFortPickupSpawnSource::Unset, PlayerController->MyFortPawn);
+				}
+			}
+			else
+				Inventory::GiveItem(PlayerController, PickupEntry.ItemDefinition, PickupEntry.Count, true);
+			};
+		auto GiveOrSwapStack = [&](int32 OriginalCount) {
+			if (PickupEntry.ItemDefinition->bAllowMultipleStacks && ItemCount < 5)
+				Inventory::GiveItem(PlayerController, PickupEntry.ItemDefinition, OriginalCount - MaxStack, true);
+			else
+				Inventory::SpawnPickup(PlayerController->GetViewTarget()->K2_GetActorLocation(), (FFortItemEntry&)PickupEntry, EFortPickupSourceTypeFlag::Player, EFortPickupSpawnSource::Unset, PlayerController->MyFortPawn, OriginalCount - MaxStack);
+			};
+		if (PickupEntry.ItemDefinition->IsStackable()) {
+			auto itemEntry = PlayerController->WorldInventory->Inventory.ReplicatedEntries.Search([PickupEntry, MaxStack](FFortItemEntry& entry)
+				{ return entry.ItemDefinition == PickupEntry.ItemDefinition && entry.Count < MaxStack; });
+			if (itemEntry) {
+				auto State = itemEntry->StateValues.Search([](FFortItemEntryStateValue& Value)
+					{ return Value.StateType == EFortItemEntryState::ShouldShowItemToast; });
+				if (!State) {
+					FFortItemEntryStateValue Value{};
+					Value.StateType = EFortItemEntryState::ShouldShowItemToast;
+					Value.IntValue = true;
+					itemEntry->StateValues.Add(Value);
+				}
+				else State->IntValue = true;
+
+				if ((itemEntry->Count += PickupEntry.Count) > MaxStack) {
+					auto OriginalCount = itemEntry->Count;
+					itemEntry->Count = MaxStack;
+
+					GiveOrSwapStack(OriginalCount);
+				}
+				Inventory::ReplaceEntry(PlayerController, *itemEntry);
+			}
+			else {
+				if (PickupEntry.Count > MaxStack) {
+					auto OriginalCount = PickupEntry.Count;
+					PickupEntry.Count = MaxStack;
+
+					GiveOrSwapStack(OriginalCount);
+				}
+				GiveOrSwap();
+			}
+		}
+		else {
+			GiveOrSwap();
+		}
+	}
+
+	inline bool (*CompletePickupAnimationOG)(AFortPickup* Pickup);
+	inline bool CompletePickupAnimation(AFortPickup* Pickup) {
+		auto Pawn = (AFortPlayerPawnAthena*)Pickup->PickupLocationData.PickupTarget;
+		if (!Pawn)
+			return CompletePickupAnimationOG(Pickup);
+		auto PlayerController = (AFortPlayerControllerAthena*)Pawn->Controller;
+		if (!PlayerController)
+			return CompletePickupAnimationOG(Pickup);
+		if (auto entry = (FFortItemEntry*)PlayerController->SwappingItemDefinition)
+		{
+			Inventory::SpawnPickup(PlayerController->GetViewTarget()->K2_GetActorLocation(), *entry, EFortPickupSourceTypeFlag::Player, EFortPickupSpawnSource::Unset, PlayerController->MyFortPawn);
+			// SwapEntry(PC, *entry, Pickup->PrimaryPickupItemEntry);
+			Inventory::Remove(PlayerController, entry->ItemGuid);
+			Inventory::GiveItem(PlayerController, Pickup->PrimaryPickupItemEntry.ItemDefinition, Pickup->PrimaryPickupItemEntry.Count, -1);
+			PlayerController->SwappingItemDefinition = nullptr;
+		}
+		else
+		{
+			InternalPickup(PlayerController, Pickup->PrimaryPickupItemEntry);
+		}
+		return CompletePickupAnimationOG(Pickup);
+	}
+
 	inline void Hook()
 	{
 		Utils::HookVTable(AFortPlayerControllerAthena::GetDefaultObj(), 0x231, ServerExecuteInventoryItem, nullptr);
 
-		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x22B, ServerHandlePickup, (LPVOID*)&ServerHandlePickupOG);
+		//Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x22B, ServerHandlePickup, (LPVOID*)&ServerHandlePickupOG);
 
 		Utils::ExecHook(L"/Script/FortniteGame.FortPlayerController.ServerAttemptInventoryDrop", ServerAttemptInventoryDrop);
+
+		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x22B, ServerHandlePickup, (LPVOID*)&ServerHandlePickupOG);
+
+		//Utils::Hook(Jeremy::ImageBase + 0x234E47C, CompletePickupAnimation, CompletePickupAnimationOG);
 
 		Utils::HookVTable(AFortPlayerPawnAthena::GetDefaultObj(), 0x12F, NetMulticast_Athena_BatchedDamageCues, (LPVOID*)&NetMulticast_Athena_BatchedDamageCuesOG);
 	}

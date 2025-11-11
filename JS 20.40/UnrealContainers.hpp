@@ -307,6 +307,18 @@ namespace UC
 			Data = (ArrayElementType*)FMemory::Realloc(Data, (MaxElements = NewMax) * sizeof(ArrayElementType), 0);
 		}
 
+		template <class PT>
+		__forceinline ArrayElementType* Search1(PT Predicate, int32 Size = ElementSize)
+		{
+			for (int i = 0; i < Num(); i++)
+			{
+				auto& v = Get(i, Size);
+
+				if (Predicate(v)) return &v;
+			}
+			return nullptr;
+		}
+
 		/* Adds to the array if there is still space for one more element */
 		inline bool Add(const ArrayElementType& Element)
 		{
@@ -705,11 +717,8 @@ namespace UC
 	public:
 		using ElementType = TPair<KeyElementType, ValueElementType>;
 
-	private:
+	public:
 		TSet<ElementType> Elements;
-
-	private:
-		inline void VerifyIndex(int32 Index) const { if (!IsValidIndex(Index)) throw std::out_of_range("Index was out of range!"); }
 
 	public:
 		inline int32 NumAllocated() const { return Elements.NumAllocated(); }
@@ -725,15 +734,27 @@ namespace UC
 		const ContainerImpl::FBitArray& GetAllocationFlags() const { return Elements.GetAllocationFlags(); }
 
 	public:
-		inline decltype(auto) Find(const KeyElementType& Key, bool(*Equals)(const KeyElementType& LeftKey, const KeyElementType& RightKey))
+		__forceinline auto Find(const KeyElementType& Key, bool(*Equals)(const KeyElementType& LeftKey, const KeyElementType& RightKey))
 		{
-			for (auto It = begin(*this); It != end(*this); ++It)
+			for (auto It = this->begin(); It != this->end(); ++It)
 			{
 				if (Equals(It->Key(), Key))
 					return It;
 			}
-		
-			return end(*this);
+
+			return this->end();
+		}
+
+		template<typename NewValueType>
+		operator TMap<KeyElementType, NewValueType*>()
+		{
+			return *(TMap<KeyElementType, NewValueType*> *) this;
+		}
+
+		template<typename NewValueType>
+		operator TMap<KeyElementType, NewValueType*>() const
+		{
+			return *(TMap<KeyElementType, NewValueType*> *) this;
 		}
 
 		template <class PT>
@@ -744,16 +765,26 @@ namespace UC
 			return nullptr;
 		}
 
+
+		template <class PT>
+		KeyElementType* SearchForKey(PT Predicate) {
+			for (auto& [k, v] : *this) {
+				if (Predicate(k, v)) return &k;
+			}
+			return nullptr;
+		}
+
+
 	public:
-		inline       ElementType& operator[] (int32 Index)       { return Elements[Index]; }
+		inline       ElementType& operator[] (int32 Index) { return Elements[Index]; }
 		inline const ElementType& operator[] (int32 Index) const { return Elements[Index]; }
 
 		inline bool operator==(const TMap<KeyElementType, ValueElementType>& Other) const { return Elements == Other.Elements; }
 		inline bool operator!=(const TMap<KeyElementType, ValueElementType>& Other) const { return Elements != Other.Elements; }
 
 	public:
-		template<typename KeyType, typename ValueType> friend Iterators::TMapIterator<KeyType, ValueType> begin(const TMap& Map);
-		template<typename KeyType, typename ValueType> friend Iterators::TMapIterator<KeyType, ValueType> end  (const TMap& Map);
+		inline Iterators::TMapIterator<KeyElementType, ValueElementType> begin() { return Iterators::TMapIterator<KeyElementType, ValueElementType>(*this, GetAllocationFlags(), 0); }
+		inline Iterators::TMapIterator<KeyElementType, ValueElementType> end() { return Iterators::TMapIterator<KeyElementType, ValueElementType>(*this, GetAllocationFlags(), NumAllocated()); }
 	};
 
 	namespace Iterators
