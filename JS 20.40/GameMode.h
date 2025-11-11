@@ -275,36 +275,36 @@ namespace GameMode
 		}
 	}
 
-	void OnAircraftEnteredDropZone(UObject* Context, FFrame& Stack) {
-		AFortAthenaAircraft* Aircraft;
-		Stack.StepCompiledIn(&Aircraft);
-		Stack.IncrementCode();
+	//void OnAircraftEnteredDropZone(UObject* Context, FFrame& Stack) {
+	//	AFortAthenaAircraft* Aircraft;
+	//	Stack.StepCompiledIn(&Aircraft);
+	//	Stack.IncrementCode();
 
-		auto GameMode = (AFortGameModeAthena*)Context;
-		auto GameState = (AFortGameStateAthena*)GameMode->GameState;
+	//	auto GameMode = (AFortGameModeAthena*)Context;
+	//	auto GameState = (AFortGameStateAthena*)GameMode->GameState;
 
-		callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftEnteredDropZone, Aircraft);
-	}
+	//	callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftEnteredDropZone, Aircraft);
+	//}
 
-	void OnAircraftExitedDropZone(UObject* Context, FFrame& Stack)
-	{
-		AFortAthenaAircraft* Aircraft;
-		Stack.StepCompiledIn(&Aircraft);
-		Stack.IncrementCode();
+	//void OnAircraftExitedDropZone(UObject* Context, FFrame& Stack)
+	//{
+	//	AFortAthenaAircraft* Aircraft;
+	//	Stack.StepCompiledIn(&Aircraft);
+	//	Stack.IncrementCode();
 
-		auto GameMode = (AFortGameModeAthena*)Context;
-		auto GameState = (AFortGameStateAthena*)GameMode->GameState;
+	//	auto GameMode = (AFortGameModeAthena*)Context;
+	//	auto GameState = (AFortGameStateAthena*)GameMode->GameState;
 
-		for (auto& Player : GameMode->AlivePlayers)
-		{
-			if (Player->IsInAircraft())
-			{
-				Player->GetAircraftComponent()->ServerAttemptAircraftJump({});
-			}
-		}
+	//	for (auto& Player : GameMode->AlivePlayers)
+	//	{
+	//		if (Player->IsInAircraft())
+	//		{
+	//			Player->GetAircraftComponent()->ServerAttemptAircraftJump({});
+	//		}
+	//	}
 
-		callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftExitedDropZone, Aircraft);
-	}
+	//	callOG(GameMode, Stack.CurrentNativeFunction, OnAircraftExitedDropZone, Aircraft);
+	//}
 
 	void (*StartNewSafeZonePhaseOG)(AFortGameModeAthena*, int);
 	void StartNewSafeZonePhase(AFortGameModeAthena* GameMode, int a2)

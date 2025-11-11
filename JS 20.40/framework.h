@@ -325,13 +325,6 @@ DefUHookOg(OnAircraftEnteredDropZone);
 
 #define callOG(_Tr, _Fn, _Th, ...) ([&](){ _Fn->ExecFunction = (UFunction::FNativeFuncPtr) _Th##OG; _Tr->_Th(##__VA_ARGS__); _Fn->ExecFunction = (UFunction::FNativeFuncPtr) _Th; })()
 
-class alignas(0x8) FOutputDevice
-{
-public:
-	bool bSuppressEventTag;
-	bool bAutoEmitLineTerminator;
-};
-
 struct FOutParmRec
 {
 	UProperty* Property;
@@ -351,6 +344,13 @@ inline FFortRangedWeaponStats* GetStats(UFortWeaponItemDefinition* Def)
 	return Val ? *(FFortRangedWeaponStats**)Val : nullptr;
 }
 
+class alignas(0x8) FOutputDevice
+{
+public:
+	bool bSuppressEventTag;
+	bool bAutoEmitLineTerminator;
+};
+
 class FFrame : public FOutputDevice
 {
 public:
@@ -359,60 +359,68 @@ public:
 	UObject* Object;
 	uint8* Code;
 	uint8* Locals;
-	FProperty* MostRecentProperty;
+	void* MostRecentProperty;
 	uint8_t* MostRecentPropertyAddress;
-	TArray<void*> FlowStack;
-	FFrame* PreviousFrame;
-	FOutParmRec* OutParms;
-	uint8_t _Padding1[0x20];
-	FField* PropertyChainForCompiledIn;
-	UFunction* CurrentNativeFunction;
-	bool bArrayContextFailed;
+	uint8_t _Padding1[0x40];
+	const UField* PropertyChainForCompiledIn;
 
 public:
-	inline void StepCompiledIn(void* const Result = nullptr, bool ForceExplicitProp = false);
+	inline UFunction* GetCurrentNativeFunction()
+	{
+		UFunction* Func = *(UFunction**)(__int64(this) + (0x90));
 
-	template <typename T>
-	__forceinline T& StepCompiledInRef() {
-		T TempVal{};
+		return Func;
+	}
+
+	inline void StepCompiledIn(void* const Result = nullptr)
+	{
+		if (Code)
+		{
+			((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, Result);
+		}
+		else
+		{
+			const UField* _Prop = *(const UField**)(__int64(this) + (0x88));
+			if (_Prop)
+			{
+				*(const UField**)(__int64(this) + (0x88)) = _Prop->Next;
+				((void (*)(FFrame*, void* const, const UField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, Result, _Prop);
+			}
+		}
+	}
+
+
+	inline void* StepCompiledInRefInternal(void* _Tm)
+	{
 		MostRecentPropertyAddress = nullptr;
 
 		if (Code)
 		{
-			Jeremy::Funcs::Step(this, Object, &TempVal);
+			((void (*)(FFrame*, UObject*, void* const)) (Jeremy::ImageBase + Jeremy::Offsets::Step))(this, Object, _Tm);
 		}
 		else
 		{
-			FField* _Prop = PropertyChainForCompiledIn;
-			PropertyChainForCompiledIn = _Prop->Next;
-			Jeremy::Funcs::StepExplicitProperty(this, &TempVal, _Prop);
+			const UField* _Prop = *(const UField**)(__int64(this) + (0x88));
+			*(const UField**)(__int64(this) + (0x88)) = _Prop->Next;
+			((void (*)(FFrame*, void* const, const UField*)) (Jeremy::ImageBase + Jeremy::Offsets::StepExplicitProperty))(this, _Tm, _Prop);
 		}
 
-		return MostRecentPropertyAddress ? *(T*)MostRecentPropertyAddress : TempVal;
+		return MostRecentPropertyAddress ? MostRecentPropertyAddress : _Tm;
 	}
 
-	inline void IncrementCode();
+	template <typename T>
+	inline T& StepCompiledInRef()
+	{
+		T TempVal{};
+		return *(T*)StepCompiledInRefInternal(&TempVal);
+	}
+
+	inline void IncrementCode()
+	{
+		if (Code)
+			Code++;
+	}
 };
-
-void FFrame::StepCompiledIn(void* const Result, bool ForceExplicitProp)
-{
-	if (Code && !ForceExplicitProp)
-	{
-		Jeremy::Funcs::Step(this, Object, Result);
-	}
-	else
-	{
-		FField* _Prop = PropertyChainForCompiledIn;
-		PropertyChainForCompiledIn = _Prop->Next;
-		Jeremy::Funcs::StepExplicitProperty(this, Result, _Prop);
-	}
-}
-
-
-void FFrame::IncrementCode() {
-	Code = (uint8_t*)(__int64(Code) + (bool)Code);
-}
-
 
 enum ESpawnActorNameMode : uint8
 {

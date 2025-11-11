@@ -25,8 +25,8 @@ class FFrame;
 namespace Jeremy {
     inline auto ImageBase = *(uint64_t*)(__readgsqword(0x60) + 0x10);
     namespace Offsets {
-        inline uint64_t Step = 0xF6D050;
-        inline uint64_t StepExplicitProperty = 0x10A04C0;
+        inline uint64_t Step = 0xf6d050;
+        inline uint64_t StepExplicitProperty = 0x10a04c0;
         inline uint64_t GetWorldContext = 0xf124b4;
         inline uint64_t CreateNetDriverWorldContext = 0x17b0ea0;
         inline uint64_t InitHost = 0x567d4a4;
